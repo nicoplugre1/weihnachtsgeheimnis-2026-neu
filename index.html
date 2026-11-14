@@ -1,1 +1,536 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Weihnachtsgeheimnis 2026</title>
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;min-height:100vh;padding:20px;
+ display:flex;align-items:center;justify-content:center;
+ font-family:Arial,sans-serif;color:#fff5dc;
+ background:radial-gradient(circle at top,#477b51,#183d2a 55%,#081a12);
+}
+.snow{position:fixed;top:-30px;color:white;opacity:.7;font-size:20px;pointer-events:none;animation:fall linear infinite}
+@keyframes fall{to{transform:translateY(110vh) rotate(360deg)}}
+.container{
+ width:100%;max-width:700px;padding:30px;text-align:center;
+ background:rgba(8,27,19,.97);border:2px solid #d6b451;
+ border-radius:25px;box-shadow:0 0 45px #0009;
+}
+h1{color:#f0d47b;font-size:clamp(25px,5vw,38px)}
+h2{color:#f0d47b}
+.subtitle{color:#ded7c3;line-height:1.6}
+.tree{font-size:110px;margin:10px}
+.lights{color:#f4d46f;font-size:24px;letter-spacing:9px;margin:15px}
+button{cursor:pointer}
+.start-button{
+ margin-top:20px;width:100%;max-width:330px;padding:18px;
+ border:2px solid #f5dc8c;border-radius:15px;
+ background:linear-gradient(135deg,#d9b64e,#a67b25);
+ color:#17291b;font-size:21px;font-weight:bold;
+}
+.secondary-button{
+ border:1px solid #c9a64b;background:#244a35;color:white;
+ padding:15px;border-radius:12px;font-size:16px;
+}
+.progress{height:10px;background:#304b3b;border-radius:20px;margin:22px 0;overflow:hidden}
+.progress-bar{height:100%;background:linear-gradient(90deg,#b28b31,#ffe99b);width:0}
+.stats{display:flex;justify-content:space-around;gap:10px;flex-wrap:wrap;color:#e6c66d}
+.question{font-size:20px;line-height:1.5;margin:25px 0}
+.answers{display:grid;gap:12px}
+.answers button{
+ border:1px solid #c9a64b;background:#244a35;color:white;
+ padding:15px;border-radius:12px;font-size:16px;
+}
+.answers button:hover:not(:disabled){background:#376747}
+.answers button:disabled{opacity:.6;cursor:default}
+.feedback{min-height:65px;margin:20px 0;font-size:18px;line-height:1.5}
+.door{
+ display:inline-block;background:linear-gradient(135deg,#f5dc8c,#bd9132);
+ color:#102b20;padding:14px 22px;border-radius:12px;
+ font-size:25px;font-weight:bold;margin:10px;
+}
+.errorText{color:#ffb3a8}
+.camera-box{margin:18px auto;max-width:520px}
+#cameraVideo{width:100%;max-height:360px;background:#000;border:2px solid #d6b451;border-radius:14px;object-fit:cover}
+#photoPreview{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin:18px 0}
+.photo-card{background:#244a35;border:1px solid #c9a64b;border-radius:10px;padding:8px;font-size:14px}
+.photo-card img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:7px;margin-top:6px}
+.camera-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:14px 0}
+.hidden{display:none!important}
+.small{color:#bcb69f;font-size:13px;margin-top:25px}
+.decoration{color:#d6b451;font-size:20px;margin:12px}
+.qr-grid{display:grid;grid-template-columns:repeat(3,minmax(180px,1fr));gap:20px;margin:28px 0 10px}
+.qr-card{background:rgba(36,74,53,.75);border:1px solid #c9a64b;border-radius:14px;padding:16px}
+.qr-card h3{margin:0 0 12px;color:#f0d47b;font-size:1.3rem}
+.qr-card img{width:min(180px,70vw);height:min(180px,70vw);display:block;margin:0 auto;background:#fff;border-radius:10px;padding:8px}
+@media (max-width:720px){.qr-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
 
+<div class="snow" style="left:8%;animation-duration:12s">❄</div>
+<div class="snow" style="left:22%;animation-duration:16s">❅</div>
+<div class="snow" style="left:48%;animation-duration:13s">❄</div>
+<div class="snow" style="left:72%;animation-duration:17s">❅</div>
+<div class="snow" style="left:91%;animation-duration:14s">❄</div>
+
+<div class="container">
+
+<div class="qr-grid">
+  <div class="qr-card">
+    <h3>Mama</h3>
+    <img id="qrMama" alt="Mama Quiz QR Code" />
+  </div>
+  <div class="qr-card">
+    <h3>Luna</h3>
+    <img id="qrLuna" alt="Luna Quiz QR Code" />
+  </div>
+  <div class="qr-card">
+    <h3>Papa</h3>
+    <img id="qrPapa" alt="Papa Quiz QR Code" />
+  </div>
+</div>
+
+<div id="startScreen">
+ <div class="decoration">✦ ❄ ✦ ❄ ✦</div>
+ <h1>Das Weihnachtsgeheimnis</h1>
+ <p class="subtitle">Weihnachtsmission 2026</p>
+ <div class="lights">✦ ● ✦ ● ✦ ● ✦</div>
+ <div class="tree">🎄</div>
+ <h2 id="welcomeTitle">Willkommen!</h2>
+ <p class="subtitle" id="welcomeText"></p>
+ <p class="subtitle">Schaffst du alle 16 Fragen?</p>
+ <button class="start-button" id="startButton" onclick="startQuiz()">🎁 Quiz starten</button>
+ <div class="decoration">✦ ❄ ✦ ❄ ✦</div>
+</div>
+
+<div id="game" class="hidden">
+ <h1>🎄 Weihnachtsquiz 🎄</h1>
+ <p class="subtitle" id="quizWelcome"></p>
+ <div class="stats">
+  <span id="counter">Frage 1 von 16</span>
+  <span id="errors">Fehler: 0 / 7</span>
+ </div>
+ <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
+ <div class="question" id="question"></div>
+ <div class="answers" id="answers"></div>
+ <div class="feedback" id="feedback"></div>
+ <button id="nextButton" class="secondary-button hidden" onclick="nextQuestion()">Weiter ➜</button>
+</div>
+
+<div id="photoChallenge" class="hidden">
+ <div class="tree">📸</div>
+ <h1>Papas Foto-Challenge</h1>
+ <p class="subtitle">Mache nacheinander fünf Fotos. Fotografiere jeweils den Gegenstand, der angezeigt wird.</p>
+ <h2 id="photoTask">1 von 5: Kugelschreiber</h2>
+ <p class="subtitle" id="photoHint">Halte den Gegenstand ins Kamerabild und drücke auf „Foto aufnehmen“.</p>
+ <div class="camera-box">
+  <video id="cameraVideo" autoplay playsinline muted></video>
+  <canvas id="photoCanvas" class="hidden"></canvas>
+ </div>
+ <div class="camera-actions">
+  <button id="cameraStartButton" class="start-button" onclick="startCamera()">📷 Kamera öffnen</button>
+  <button id="captureButton" class="secondary-button hidden" onclick="takePhoto()">Foto aufnehmen</button>
+  <button id="finishPhotoButton" class="start-button hidden" onclick="finishPhotoChallenge()">🎁 Challenge abschließen</button>
+ </div>
+ <p class="subtitle" id="cameraStatus" aria-live="polite">Die Kamera wird erst geöffnet, wenn du auf „Kamera öffnen“ drückst.</p>
+ <div id="photoPreview"></div>
+</div>
+
+<div id="finished" class="hidden">
+ <div class="tree">🎄</div>
+ <h1>Geschafft!</h1>
+ <p class="subtitle">Du hast alle 16 Fragen beantwortet!</p>
+ <p id="finalErrors"></p>
+ <h2>Deine 8 Türnummern:</h2>
+ <div id="allDoors"></div>
+ <p class="subtitle">Frohe Weihnachten! 🎁</p>
+ <button class="start-button" onclick="playAgain()">🔄 Noch einmal spielen</button>
+</div>
+
+<p class="small">✦ Das Weihnachtsgeheimnis 2026 ✦</p>
+</div>
+
+<script>
+const missions={
+mama:{
+ name:"Mami",
+ doors:[2,6,8,11,14,17,19,23],
+ questions:[
+ {q:"MATHE: Ein Artikel kostet 240 €. Zuerst gibt es 15 % Rabatt, danach nochmals 20 % auf den reduzierten Preis. Wie viel kostet er am Ende?",a:["163,20 €","168 €","172,80 €","180 €"],correct:0},
+ {q:"MATHE: Löse die Gleichung: 3(2x − 4) = 2x + 12",a:["x = 4","x = 5","x = 6","x = 8"],correct:2},
+ {q:"ENGLISCH: If I _____ more time, I would learn another language.",a:["have","had","will have","would have"],correct:1},
+ {q:"ENGLISCH: Welche Zeitform ist das? She has been waiting for two hours.",a:["Simple Past","Present Perfect","Present Perfect Progressive","Past Perfect"],correct:2},
+ {q:"ENGLISCH: If she had studied harder, she _____ the exam.",a:["will pass","would pass","would have passed","has passed"],correct:2},
+ {q:"ENGLISCH: Welche Aussage ist grammatikalisch richtig?",a:["He doesn't likes coffee.","He don't like coffee.","He doesn't like coffee.","He not like coffee."],correct:2},
+ {q:"FRANZÖSISCH: Hier, nous _____ au cinéma.",a:["allons","sommes allés","avons allé","aller"],correct:1},
+ {q:"FRANZÖSISCH: Was bedeutet: Depuis trois ans, j'habite à Paris?",a:["Vor drei Jahren wohnte ich in Paris.","Seit drei Jahren wohne ich in Paris.","Ich werde drei Jahre in Paris wohnen.","Ich war drei Jahre in Paris."],correct:1},
+ {q:"FRANZÖSISCH: Welches Wort bedeutet „obwohl“?",a:["parce que","mais","bien que","donc"],correct:2},
+ {q:"FRANKREICH: Welcher Fluss fließt durch Paris?",a:["Loire","Seine","Rhône","Garonne"],correct:1},
+ {q:"FRANKREICH: Welche Stadt ist für ihren großen Hafen am Mittelmeer bekannt?",a:["Marseille","Lille","Straßburg","Dijon"],correct:0},
+ {q:"FRANKREICH: Wie heißt das französische Überseegebiet in der Karibik?",a:["Korsika","Guadeloupe","Bretagne","Normandie"],correct:1},
+ {q:"MATHE: Ein Preis wird erst um 25 % erhöht und danach um 20 % gesenkt. Wie verändert sich der ursprüngliche Preis?",a:["Er bleibt gleich.","Er steigt um 5 %.","Er sinkt um 5 %.","Er steigt um 10 %."],correct:0},
+ {q:"ENGLISCH: Choose the grammatically correct sentence.",a:["I have seen him yesterday.","I saw him yesterday.","I have saw him yesterday.","I seen him yesterday."],correct:1},
+ {q:"FRANZÖSISCH: Ergänze richtig: Si j'avais le temps, je _____ avec toi.",a:["viens","viendrai","viendrais","suis venu"],correct:2},
+ {q:"ENGLISCH: Which sentence is in the Past Perfect?",a:["She had finished before I arrived.","She has finished her work.","She finished her work yesterday.","She finishes her work."],correct:0}
+ ]},
+
+papa:{
+ name:"Dusi",
+ doors:[1,4,7,10,13,16,20,22],
+ questions:[
+ {q:"SIMSON: Welcher Motortyp wird bei der klassischen S51 verwendet?",a:["Viertaktmotor","Zweitaktmotor","Wankelmotor","Dieselmotor"],correct:1},
+ {q:"SIMSON: Welche Aufgabe hat der Vergaser?",a:["Er lädt die Batterie.","Er mischt Kraftstoff und Luft.","Er schaltet die Gänge.","Er kühlt das Getriebeöl."],correct:1},
+ {q:"SIMSON: Was bedeutet die Bezeichnung M541?",a:["Ein Motor mit 5 Gängen und 41 PS","Ein Motor der M500-Baureihe mit 4 Gängen","Ein 41-cm³-Motor","Ein 5-Takt-Motor"],correct:1},
+ {q:"SIMSON: Welche Aufgabe hat die Zündkerze?",a:["Sie entzündet das verdichtete Kraftstoff-Luft-Gemisch.","Sie pumpt Benzin in den Tank.","Sie schmiert die Kurbelwelle.","Sie regelt die Gangschaltung."],correct:0},
+ {q:"SIMSON: Welches Bauteil überträgt die Kraft vom Motor zum Hinterrad?",a:["Lichtmaschine","Kette und Kettenräder","Zündspule","Lenkkopflager"],correct:1},
+ {q:"SIMSON: In welcher Stadt befand sich das bekannte Simson-Werk?",a:["Suhl","Zwickau","Dresden","Potsdam"],correct:0},
+ {q:"SIMSON: Welche Aufgabe hat die Kupplung?",a:["Sie trennt und verbindet den Kraftfluss zwischen Motor und Getriebe.","Sie steuert die Beleuchtung.","Sie misst die Geschwindigkeit.","Sie kühlt den Zylinder."],correct:0},
+ {q:"SIMSON: Wie viele Gänge hat die originale S51 mit M541-Motor?",a:["2","3","4","5"],correct:2},
+ {q:"SIMSON: Was bedeutet das Kürzel KR bei der KR51/1 Schwalbe?",a:["Kraftrad","Kleinroller","Kettenrad","Kleinrennmaschine"],correct:1},
+ {q:"SIMSON: Welche Funktion hat die Lichtmaschine?",a:["Sie erzeugt elektrische Energie für elektrische Verbraucher und die Zündung.","Sie pumpt Öl in den Motor.","Sie regelt den Benzinfluss.","Sie kühlt den Vergaser."],correct:0},
+ {q:"SIMSON: Was ist das Besondere am Gemischschmiersystem eines klassischen Zweitaktmotors?",a:["Das Öl wird dem Kraftstoff beigemischt.","Das Öl wird nur auf die Reifen gesprüht.","Der Motor braucht überhaupt kein Öl.","Das Öl wird im Kühler gespeichert."],correct:0},
+ {q:"SIMSON: Welcher Hubraum ist für die klassische S51 typisch?",a:["50 cm³","80 cm³","125 cm³","250 cm³"],correct:0},
+ {q:"SIMSON: Welche Aufgabe hat der Schwimmer im Vergaser?",a:["Er regelt den Kraftstoffstand in der Schwimmerkammer.","Er verstellt den Zündzeitpunkt.","Er öffnet den Auslass.","Er treibt die Kette an."],correct:0},
+ {q:"SIMSON: Was kann ein zu fettes Kraftstoff-Luft-Gemisch verursachen?",a:["Unvollständige Verbrennung und erhöhten Kraftstoffverbrauch.","Eine höhere Batteriespannung.","Eine kürzere Übersetzung.","Eine stärkere Kette."],correct:0},
+ {q:"SIMSON: Welche Aufgabe hat der Unterbrecherkontakt bei einer älteren Unterbrecherzündung?",a:["Er unterbricht den Primärstrom und löst dadurch den Zündfunken aus.","Er misst den Reifendruck.","Er steuert die Kupplung.","Er regelt den Benzinhahn."],correct:0},
+ {q:"SIMSON: Warum ist die richtige Zündeinstellung wichtig?",a:["Damit der Zündfunke zum richtigen Zeitpunkt entsteht.","Damit die Kette nicht rostet.","Damit der Tank mehr Benzin fasst.","Damit die Reifen länger halten."],correct:0}
+ ]},
+
+luni:{
+ name:"Luni",
+ doors:[3,5,9,12,15,18,21,24],
+ questions:[
+ {q:"FAHRSCHULE: Du kommst an eine Kreuzung ohne Verkehrszeichen. Von rechts kommt ein Auto. Was gilt grundsätzlich?",a:["Du hast Vorfahrt.","Rechts vor links.","Das größere Fahrzeug hat Vorfahrt.","Wer zuerst hupt, darf fahren."],correct:1},
+ {q:"FAHRSCHULE: Was bedeutet ein rundes blaues Verkehrszeichen mit weißem Pfeil nach rechts?",a:["Rechts abbiegen ist verboten.","Vorgeschriebene Fahrtrichtung rechts.","Einbahnstraße endet.","Achtung, Kurve."],correct:1},
+ {q:"FAHRSCHULE: Wie lange dauert die reguläre Probezeit beim erstmaligen Erwerb einer Fahrerlaubnis?",a:["Ein Jahr","Zwei Jahre","Drei Jahre","Vier Jahre"],correct:1},
+ {q:"FAHRSCHULE: Du fährst auf eine Autobahn auf. Was ist richtig?",a:["Auf dem Beschleunigungsstreifen Geschwindigkeit anpassen und eine passende Lücke suchen.","Sofort auf dem Beschleunigungsstreifen anhalten.","Vorfahrt erzwingen.","Auf dem Standstreifen weiterfahren."],correct:0},
+ {q:"FAHRSCHULE: Was gilt beim Überholen unmittelbar vor einem Fußgängerüberweg?",a:["Überholen ist erlaubt, wenn niemand zu sehen ist.","Überholen ist verboten.","Nur Motorräder dürfen überholen.","Man darf hupen und überholen."],correct:1},
+ {q:"FAHRSCHULE: Was gilt beim Abbiegen gegenüber Fußgängern, die die Straße überqueren, in die man einbiegt?",a:["Sie müssen immer warten.","Man muss ihnen das Überqueren ermöglichen und nötigenfalls warten.","Nur bei einer roten Ampel muss man warten.","Es gilt immer rechts vor links."],correct:1},
+ {q:"KLETTERN: Wie heißt der Knoten, der häufig zum Einbinden ins Kletterseil verwendet wird?",a:["Palstek","Achterknoten","Kreuzknoten","Schotstek"],correct:1},
+ {q:"KLETTERN: Was wird beim Partnercheck vor dem Klettern kontrolliert?",a:["Gurt, Knoten, Sicherungsgerät und Seil.","Nur die Kletterschuhe.","Nur die Farbe des Seils.","Die Anzahl der Griffe."],correct:0},
+ {q:"KLETTERN: Was versteht man unter Bouldern?",a:["Klettern an hohen Wänden mit Seil.","Klettern in geringer Höhe ohne Seil über Matten.","Klettern an gefrorenen Wasserfällen.","Klettern mit Steigeisen."],correct:1},
+ {q:"KLETTERN: Was bedeutet beim Klettern dynamisches Sichern?",a:["Die Sicherungsperson gibt kontrolliert etwas Seil, um einen Sturz etwas weicher abzufangen.","Man lässt das Seil vollständig los.","Man klettert ohne Sicherung.","Man zieht das Seil immer maximal straff."],correct:0},
+ {q:"KLETTERN: Warum sollte ein Kletterseil vor und nach dem Klettern kontrolliert werden?",a:["Um Schäden wie Schnitte, starke Abnutzung oder ungewöhnliche Stellen zu erkennen.","Damit es seine Farbe behält.","Damit es länger wird.","Damit es weniger wiegt."],correct:0},
+ {q:"KLETTERN: Was beschreibt der Begriff Vorstieg?",a:["Man klettert eine Route und hängt das Seil während des Aufstiegs in Zwischensicherungen ein.","Man klettert immer ohne Seil.","Man klettert nur an einer Boulderwand.","Man steigt auf einer Treppe zur Kletterwand."],correct:0},
+ {q:"FAHRSCHULE: Was ist bei einer gelben Ampel richtig, wenn du noch sicher vor der Haltlinie anhalten kannst?",a:["Beschleunigen.","Anhalten.","Immer weiterfahren.","Hupen."],correct:1},
+ {q:"FAHRSCHULE: Was bedeutet ein dreieckiges Verkehrszeichen mit rotem Rand und schwarzem Kreuz?",a:["Vorfahrt gewähren.","Kreuzung oder Einmündung mit Vorfahrt von rechts.","Vorfahrtstraße.","Absolutes Haltverbot."],correct:1},
+ {q:"KLETTERN: Warum ist ein geeigneter Sicherungspartner wichtig?",a:["Er kontrolliert die Sicherung und reagiert aufmerksam auf die kletternde Person.","Er muss schwerer als die kletternde Person sein.","Er darf währenddessen telefonieren.","Er muss dieselben Kletterschuhe tragen."],correct:0},
+ {q:"KLETTERN: Was versteht man unter einer Route im Überhang?",a:["Eine Kletterroute, bei der die Wand über die Senkrechte hinaus geneigt ist.","Eine Route auf einer waagerechten Treppe.","Eine Route ohne Griffe.","Eine Route ausschließlich am Boden."],correct:0}
+ ]}
+};
+
+const baseUrl = 'https://nicoplugre.github.io/weihnachtsgeheimnis-2026-neu/';
+const qrBase = 'https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=';
+
+const qrLinks = {
+  mama: `${baseUrl}?mission=mama`,
+  luna: `${baseUrl}?mission=luni`,
+  papa: `${baseUrl}?mission=papa`
+};
+
+['mama','luna','papa'].forEach(personName => {
+  const img = document.getElementById('qr' + personName.charAt(0).toUpperCase() + personName.slice(1));
+  if (img) img.src = qrBase + encodeURIComponent(qrLinks[personName]);
+});
+
+const TOTAL=16;
+const MAX_ERRORS=7;
+
+const params=new URLSearchParams(location.search);
+let person=(params.get("mission")||"").trim().toLowerCase();
+if(person==="mami")person="mama";
+if(person==="dusi")person="papa";
+if(person==="luna")person="luni";
+
+const mission=missions[person];
+let current=0,errors=0,answered=false;
+
+const startScreen=document.getElementById("startScreen");
+const game=document.getElementById("game");
+const finished=document.getElementById("finished");
+
+function storageKey(){
+ return "weihnachtsgeheimnis_2026_version_16_neu_"+person;
+}
+
+function saveProgress(){
+ localStorage.setItem(storageKey(),JSON.stringify({
+  current:current,
+  errors:errors
+ }));
+}
+
+function loadProgress(){
+ try{
+  const saved=JSON.parse(localStorage.getItem(storageKey()));
+  if(saved &&
+     Number.isInteger(saved.current) &&
+     Number.isInteger(saved.errors) &&
+     saved.current>=0 && saved.current<TOTAL &&
+     saved.errors>=0 && saved.errors<MAX_ERRORS){
+    current=saved.current;
+    errors=saved.errors;
+  }
+ }catch(e){
+  current=0;
+  errors=0;
+ }
+}
+
+if(mission){
+ document.getElementById("welcomeTitle").textContent="Willkommen, "+mission.name+"! 🎄";
+ document.getElementById("welcomeText").textContent=
+ "Deine persönliche Weihnachtsmission wartet! Beantworte 16 Fragen und sammle deine 8 geheimen Türnummern. Du hast maximal 7 Fehler!";
+ loadProgress();
+ if(current>0){
+  document.getElementById("startButton").textContent="🎁 Quiz fortsetzen";
+ }
+}else{
+ document.getElementById("welcomeTitle").textContent="Willkommen!";
+ document.getElementById("welcomeText").textContent="Bitte nutze deinen persönlichen QR-Code.";
+ document.getElementById("startButton").classList.add("hidden");
+}
+
+function startQuiz(){
+ if(!mission){
+  alert("Person nicht erkannt. Bitte kontrolliere den QR-Code-Link.");
+  return;
+ }
+ startScreen.classList.add("hidden");
+ finished.classList.add("hidden");
+ document.getElementById("allDoors").innerHTML="";
+ game.classList.remove("hidden");
+ document.getElementById("quizWelcome").textContent="Viel Erfolg, "+mission.name+"! 🎄";
+ renderQuestion();
+}
+
+function updateStats(){
+ document.getElementById("counter").textContent=
+ "Frage "+Math.min(current+1,TOTAL)+" von "+TOTAL;
+ document.getElementById("errors").textContent=
+ "Fehler: "+errors+" / "+MAX_ERRORS;
+ document.getElementById("progressBar").style.width=
+ (Math.min(current,TOTAL)/TOTAL*100)+"%";
+}
+
+function renderQuestion(){
+ answered=false;
+ finished.classList.add("hidden");
+ document.getElementById("allDoors").innerHTML="";
+ const item=mission.questions[current];
+ updateStats();
+ document.getElementById("question").textContent=item.q;
+ document.getElementById("feedback").textContent="";
+ document.getElementById("nextButton").classList.add("hidden");
+
+ const area=document.getElementById("answers");
+ area.innerHTML="";
+
+ item.a.forEach((answer,index)=>{
+  const button=document.createElement("button");
+  button.textContent=answer;
+  button.onclick=()=>checkAnswer(index,button);
+  area.appendChild(button);
+ });
+}
+
+function checkAnswer(index,selected){
+ if(answered)return;
+
+ const item=mission.questions[current];
+ const buttons=document.querySelectorAll("#answers button");
+ const feedback=document.getElementById("feedback");
+
+ if(index===item.correct){
+  answered=true;
+  buttons.forEach(button=>button.disabled=true);
+
+  feedback.textContent="🎉 Richtig! Weiter geht's!";
+
+  current++;
+  saveProgress();
+  updateStats();
+  document.getElementById("nextButton").classList.remove("hidden");
+  return;
+ }
+
+ errors++;
+
+ if(errors>=MAX_ERRORS){
+  current=0;
+  errors=0;
+  answered=false;
+
+  localStorage.removeItem(storageKey());
+  saveProgress();
+
+  renderQuestion();
+
+  feedback.innerHTML=
+  '<span class="errorText">🚨 7 Fehler erreicht! Alles wurde zurückgesetzt. Du musst wieder bei Frage 1 anfangen!</span>';
+  return;
+ }
+
+ saveProgress();
+ updateStats();
+
+ feedback.innerHTML=
+ '<span class="errorText">❌ Leider falsch! Versuch es noch einmal.</span><br>'+
+ "Du hast "+errors+" von 7 Fehlern.";
+
+ selected.disabled=true;
+}
+
+function nextQuestion(){
+ if(current>=TOTAL){
+  if(person==="papa"){
+   startPhotoChallenge();
+  }else{
+   showFinal();
+  }
+ }else{
+  renderQuestion();
+ }
+}
+
+// Papas persönliche Foto-Challenge
+const photoTasks=["Kugelschreiber","Messer","Baum","Fisch","Laptop"];
+let photoIndex=0;
+let photoStream=null;
+let capturedPhotos=[];
+
+function startPhotoChallenge(){
+ game.classList.add("hidden");
+ document.getElementById("finished").classList.add("hidden");
+ document.getElementById("photoChallenge").classList.remove("hidden");
+ photoIndex=0;
+ capturedPhotos=[];
+ document.getElementById("photoPreview").innerHTML="";
+ document.getElementById("cameraVideo").classList.remove("hidden");
+ document.getElementById("cameraVideo").srcObject=null;
+ document.getElementById("cameraStartButton").classList.remove("hidden");
+ document.getElementById("captureButton").classList.add("hidden");
+ document.getElementById("finishPhotoButton").classList.add("hidden");
+ document.getElementById("cameraStatus").textContent="Erlaube den Kamerazugriff, wenn dein Browser danach fragt.";
+ updatePhotoTask();
+}
+
+function updatePhotoTask(){
+ document.getElementById("photoTask").textContent=(photoIndex+1)+" von 5: "+photoTasks[photoIndex];
+ document.getElementById("photoHint").textContent="Richte die Kamera auf: "+photoTasks[photoIndex]+". Dann drücke auf „Foto aufnehmen“.";
+}
+
+async function startCamera(){
+ const status=document.getElementById("cameraStatus");
+ if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+  status.textContent="Die Kamera funktioniert nur über HTTPS oder localhost. Öffne die Webseite über ihre GitHub-Pages-Adresse.";
+  return;
+ }
+ try{
+  photoStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"},audio:false});
+  const video=document.getElementById("cameraVideo");
+  video.srcObject=photoStream;
+  await video.play();
+  document.getElementById("cameraStartButton").classList.add("hidden");
+  document.getElementById("captureButton").classList.remove("hidden");
+  status.textContent="Kamera ist bereit. Mache das Foto für den angezeigten Gegenstand.";
+ }catch(error){
+  status.textContent="Kamera konnte nicht geöffnet werden. Bitte erlaube den Kamerazugriff in deinem Browser und versuche es erneut.";
+ }
+}
+
+function takePhoto(){
+ const video=document.getElementById("cameraVideo");
+ if(!photoStream || !video.videoWidth){
+  document.getElementById("cameraStatus").textContent="Die Kamera ist noch nicht bereit. Bitte kurz warten.";
+  return;
+ }
+ const canvas=document.getElementById("photoCanvas");
+ canvas.width=video.videoWidth;
+ canvas.height=video.videoHeight;
+ const context=canvas.getContext("2d");
+ context.drawImage(video,0,0,canvas.width,canvas.height);
+ const dataUrl=canvas.toDataURL("image/jpeg",0.85);
+ capturedPhotos.push(dataUrl);
+
+ const card=document.createElement("div");
+ card.className="photo-card";
+ const label=document.createElement("div");
+ label.textContent="✓ "+photoTasks[photoIndex];
+ const img=document.createElement("img");
+ img.src=dataUrl;
+ img.alt="Foto von "+photoTasks[photoIndex];
+ card.append(label,img);
+ document.getElementById("photoPreview").appendChild(card);
+
+ photoIndex++;
+
+ if(photoIndex<photoTasks.length){
+  updatePhotoTask();
+  document.getElementById("cameraStatus").textContent="Foto gespeichert! Weiter geht's.";
+ }else{
+  stopCamera();
+  document.getElementById("cameraVideo").classList.add("hidden");
+  document.getElementById("captureButton").classList.add("hidden");
+  document.getElementById("finishPhotoButton").classList.remove("hidden");
+  document.getElementById("photoTask").textContent="Alle 5 Fotos sind fertig! 🎉";
+  document.getElementById("photoHint").textContent="Du hast die Foto-Challenge geschafft.";
+  document.getElementById("cameraStatus").textContent="Die Fotos bleiben nur vorübergehend auf diesem Gerät im geöffneten Browserfenster und werden nicht hochgeladen.";
+ }
+}
+
+function stopCamera(){
+ if(photoStream){
+  photoStream.getTracks().forEach(track=>track.stop());
+  photoStream=null;
+ }
+}
+
+function finishPhotoChallenge(){
+ if(capturedPhotos.length!==5)return;
+ document.getElementById("photoChallenge").classList.add("hidden");
+ showFinal();
+}
+
+function showFinal(){
+ if(!mission || current!==TOTAL || errors>=MAX_ERRORS)return;
+ if(person==="papa" && capturedPhotos.length!==photoTasks.length)return;
+
+ game.classList.add("hidden");
+ finished.classList.remove("hidden");
+
+ document.getElementById("finalErrors").textContent=
+ "Deine Fehlerzahl: "+errors+" von 7";
+
+ const area=document.getElementById("allDoors");
+ area.innerHTML="";
+
+ mission.doors.forEach(number=>{
+  const door=document.createElement("span");
+  door.className="door";
+  door.textContent=number;
+  area.appendChild(door);
+ });
+}
+
+function playAgain(){
+ stopCamera();
+ current=0;
+ errors=0;
+ answered=false;
+ capturedPhotos=[];
+ photoIndex=0;
+ saveProgress();
+
+ finished.classList.add("hidden");
+ document.getElementById("photoChallenge").classList.add("hidden");
+ startScreen.classList.remove("hidden");
+ document.getElementById("startButton").textContent="🎁 Quiz starten";
+}
+</script>
+</body>
+</html>
