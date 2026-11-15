@@ -144,7 +144,6 @@ button{cursor:pointer}
  <div class="camera-actions">
   <button id="cameraStartButton" class="start-button" onclick="startCamera()">📷 Kamera öffnen</button>
   <button id="captureButton" class="secondary-button hidden" onclick="takePhoto()">Foto aufnehmen</button>
-  <button id="finishPhotoButton" class="start-button hidden" onclick="finishPhotoChallenge()">Türnummern anzeigen 🎁</button>
  </div>
 
  <p class="subtitle" id="cameraStatus" aria-live="polite">
@@ -269,18 +268,20 @@ luni:{
  ]}
 };
 
-const baseUrl = 'https://nicoplugre1.github.io/adventskalender-2026/';
-const qrBase = 'https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=';
+// QR-Codes: Die Internetadressen bleiben unverändert.
+const baseUrl='https://nicoplugre1.github.io/adventskalender-2026/';
+const qrBase='https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=';
 
-const qrLinks = {
- mama: `${baseUrl}?mission=mama`,
- luna: `${baseUrl}?mission=luni`,
- papa: `${baseUrl}?mission=papa`
+const qrLinks={
+ mama:`${baseUrl}?mission=mama`,
+ luna:`${baseUrl}?mission=luni`,
+ papa:`${baseUrl}?mission=papa`
 };
 
-['mama','luna','papa'].forEach(personName => {
- const img = document.getElementById('qr' + personName.charAt(0).toUpperCase() + personName.slice(1));
- if(img) img.src = qrBase + encodeURIComponent(qrLinks[personName]);
+['mama','luna','papa'].forEach(personName=>{
+ const id='qr'+personName.charAt(0).toUpperCase()+personName.slice(1);
+ const img=document.getElementById(id);
+ if(img)img.src=qrBase+encodeURIComponent(qrLinks[personName]);
 });
 
 const TOTAL=16;
@@ -288,36 +289,48 @@ const MAX_ERRORS=7;
 
 const params=new URLSearchParams(location.search);
 let person=(params.get("mission")||"").trim().toLowerCase();
+
 if(person==="mami")person="mama";
 if(person==="dusi")person="papa";
 if(person==="luna")person="luni";
 
 const mission=missions[person];
-let current=0,errors=0,answered=false;
+
+let current=0;
+let errors=0;
+let answered=false;
 
 const startScreen=document.getElementById("startScreen");
 const game=document.getElementById("game");
 const finished=document.getElementById("finished");
 
+// Neue Versionsnummer: alter gespeicherter Quiz-Fortschritt wird nicht übernommen.
 function storageKey(){
- return "weihnachtsgeheimnis_2026_version_20_"+person;
+ return "weihnachtsgeheimnis_2026_version_21_"+person;
 }
 
 function saveProgress(){
- localStorage.setItem(storageKey(),JSON.stringify({
-  current:current,
-  errors:errors
- }));
+ try{
+  localStorage.setItem(storageKey(),JSON.stringify({
+   current:current,
+   errors:errors
+  }));
+ }catch(e){
+  console.warn("Fortschritt konnte nicht gespeichert werden.",e);
+ }
 }
 
 function loadProgress(){
  try{
   const saved=JSON.parse(localStorage.getItem(storageKey()));
+
   if(saved &&
      Number.isInteger(saved.current) &&
      Number.isInteger(saved.errors) &&
-     saved.current>=0 && saved.current<TOTAL &&
-     saved.errors>=0 && saved.errors<MAX_ERRORS){
+     saved.current>=0 &&
+     saved.current<=TOTAL &&
+     saved.errors>=0 &&
+     saved.errors<MAX_ERRORS){
     current=saved.current;
     errors=saved.errors;
   }
@@ -328,16 +341,21 @@ function loadProgress(){
 }
 
 if(mission){
- document.getElementById("welcomeTitle").textContent="Willkommen, "+mission.name+"! 🎄";
+ document.getElementById("welcomeTitle").textContent=
+  "Willkommen, "+mission.name+"! 🎄";
+
  document.getElementById("welcomeText").textContent=
- "Deine persönliche Weihnachtsmission wartet! Beantworte 16 Fragen und sammle deine 8 geheimen Türnummern. Du hast maximal 7 Fehler!";
+  "Deine persönliche Weihnachtsmission wartet! Beantworte 16 Fragen und sammle deine 8 geheimen Türnummern. Du hast maximal 7 Fehler!";
+
  loadProgress();
+
  if(current>0){
   document.getElementById("startButton").textContent="🎁 Quiz fortsetzen";
  }
 }else{
  document.getElementById("welcomeTitle").textContent="Willkommen!";
- document.getElementById("welcomeText").textContent="Bitte nutze deinen persönlichen QR-Code.";
+ document.getElementById("welcomeText").textContent=
+  "Bitte nutze deinen persönlichen QR-Code.";
  document.getElementById("startButton").classList.add("hidden");
 }
 
@@ -346,29 +364,46 @@ function startQuiz(){
   alert("Person nicht erkannt. Bitte kontrolliere den QR-Code-Link.");
   return;
  }
+
  startScreen.classList.add("hidden");
  finished.classList.add("hidden");
  document.getElementById("allDoors").innerHTML="";
+
+ // Falls das Quiz bereits fertig war, direkt zur persönlichen Challenge.
+ if(current>=TOTAL){
+  startPersonalChallenge();
+  return;
+ }
+
  game.classList.remove("hidden");
- document.getElementById("quizWelcome").textContent="Viel Erfolg, "+mission.name+"! 🎄";
+ document.getElementById("quizWelcome").textContent=
+  "Viel Erfolg, "+mission.name+"! 🎄";
+
  renderQuestion();
 }
 
 function updateStats(){
  document.getElementById("counter").textContent=
- "Frage "+Math.min(current+1,TOTAL)+" von "+TOTAL;
+  "Frage "+Math.min(current+1,TOTAL)+" von "+TOTAL;
+
  document.getElementById("errors").textContent=
- "Fehler: "+errors+" / "+MAX_ERRORS;
+  "Fehler: "+errors+" / "+MAX_ERRORS;
+
  document.getElementById("progressBar").style.width=
- (Math.min(current,TOTAL)/TOTAL*100)+"%";
+  (Math.min(current,TOTAL)/TOTAL*100)+"%";
 }
 
 function renderQuestion(){
  answered=false;
+
  finished.classList.add("hidden");
+
  document.getElementById("allDoors").innerHTML="";
+
  const item=mission.questions[current];
+
  updateStats();
+
  document.getElementById("question").textContent=item.q;
  document.getElementById("feedback").textContent="";
  document.getElementById("nextButton").classList.add("hidden");
@@ -393,12 +428,28 @@ function checkAnswer(index,selected){
 
  if(index===item.correct){
   answered=true;
+
   buttons.forEach(button=>button.disabled=true);
-  feedback.textContent="🎉 Richtig! Weiter geht's!";
+
   current++;
   saveProgress();
   updateStats();
-  document.getElementById("nextButton").classList.remove("hidden");
+
+  if(current>=TOTAL){
+   document.getElementById("nextButton").classList.add("hidden");
+   feedback.textContent=
+    "🎉 Alle 16 Fragen richtig beantwortet! Deine nächste Challenge startet jetzt!";
+
+   // Die persönliche Challenge startet automatisch.
+   setTimeout(()=>{
+    startPersonalChallenge();
+   },900);
+
+  }else{
+   feedback.textContent="🎉 Richtig! Weiter geht's!";
+   document.getElementById("nextButton").classList.remove("hidden");
+  }
+
   return;
  }
 
@@ -408,41 +459,73 @@ function checkAnswer(index,selected){
   current=0;
   errors=0;
   answered=false;
-  localStorage.removeItem(storageKey());
+
+  try{
+   localStorage.removeItem(storageKey());
+  }catch(e){}
+
   saveProgress();
   renderQuestion();
+
   feedback.innerHTML=
-  '<span class="errorText">🚨 7 Fehler erreicht! Alles wurde zurückgesetzt. Du musst wieder bei Frage 1 anfangen!</span>';
+   '<span class="errorText">🚨 7 Fehler erreicht! Alles wurde zurückgesetzt. Du musst wieder bei Frage 1 anfangen!</span>';
+
   return;
  }
 
  saveProgress();
  updateStats();
+
  feedback.innerHTML=
- '<span class="errorText">❌ Leider falsch! Versuch es noch einmal.</span><br>'+
- "Du hast "+errors+" von 7 Fehlern.";
+  '<span class="errorText">❌ Leider falsch! Versuch es noch einmal.</span><br>'+
+  "Du hast "+errors+" von 7 Fehlern.";
+
  selected.disabled=true;
 }
 
 function nextQuestion(){
  if(current>=TOTAL){
-  if(person==="papa") startPhotoChallenge();
-  else if(person==="mama") startMamaChallenge();
-  else if(person==="luni") startLuniChallenge();
+  startPersonalChallenge();
  }else{
   renderQuestion();
  }
 }
 
-// Papas Foto-Challenge
-const photoTasks=["Messer","Simson","Laptop","Schrank","Klobürste"];
+// Startet automatisch die passende Challenge.
+function startPersonalChallenge(){
+ game.classList.add("hidden");
+ startScreen.classList.add("hidden");
+
+ if(person==="papa"){
+  startPhotoChallenge();
+ }else if(person==="mama"){
+  startMamaChallenge();
+ }else if(person==="luni"){
+  startLuniChallenge();
+ }else{
+  alert("Person nicht erkannt.");
+ }
+}
+
+// =================================
+// PAPAS FOTO-CHALLENGE
+// =================================
+
+const photoTasks=[
+ "Messer",
+ "Simson",
+ "Laptop",
+ "Schrank",
+ "Klobürste"
+];
+
 let photoIndex=0;
 let photoStream=null;
 let capturedPhotos=[];
 
 function startPhotoChallenge(){
  game.classList.add("hidden");
- document.getElementById("finished").classList.add("hidden");
+ finished.classList.add("hidden");
  document.getElementById("codeGate").classList.add("hidden");
  document.getElementById("photoChallenge").classList.remove("hidden");
 
@@ -450,34 +533,36 @@ function startPhotoChallenge(){
  capturedPhotos=[];
 
  document.getElementById("photoPreview").innerHTML="";
- document.getElementById("cameraVideo").classList.remove("hidden");
- document.getElementById("cameraVideo").srcObject=null;
+
+ const video=document.getElementById("cameraVideo");
+ video.classList.remove("hidden");
+ video.srcObject=null;
 
  document.getElementById("cameraStartButton").classList.remove("hidden");
  document.getElementById("captureButton").classList.add("hidden");
- document.getElementById("finishPhotoButton").classList.add("hidden");
 
  document.getElementById("cameraStatus").textContent=
- "Erlaube den Kamerazugriff, wenn dein Browser danach fragt.";
+  "Erlaube den Kamerazugriff, wenn dein Browser danach fragt.";
 
  updatePhotoTask();
 }
 
 function updatePhotoTask(){
  document.getElementById("photoTask").textContent=
- (photoIndex+1)+" von 5: "+photoTasks[photoIndex];
+  (photoIndex+1)+" von 5: "+photoTasks[photoIndex];
 
  document.getElementById("photoHint").textContent=
- "Richte die Kamera auf: "+photoTasks[photoIndex]+
- ". Dann drücke auf „Foto aufnehmen“.";
+  "Richte die Kamera auf: "+photoTasks[photoIndex]+
+  ". Dann drücke auf „Foto aufnehmen“.";
 }
 
 async function startCamera(){
  const status=document.getElementById("cameraStatus");
 
- if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+ if(!navigator.mediaDevices ||
+    !navigator.mediaDevices.getUserMedia){
   status.textContent=
-  "Die Kamera funktioniert nur über HTTPS. Öffne die Webseite über ihre GitHub-Pages-Adresse.";
+   "Die Kamera funktioniert nur über HTTPS. Öffne die Webseite über ihre GitHub-Pages-Adresse.";
   return;
  }
 
@@ -489,16 +574,18 @@ async function startCamera(){
 
   const video=document.getElementById("cameraVideo");
   video.srcObject=photoStream;
+
   await video.play();
 
   document.getElementById("cameraStartButton").classList.add("hidden");
   document.getElementById("captureButton").classList.remove("hidden");
 
-  status.textContent="Kamera ist bereit. Mache das Foto für den angezeigten Gegenstand.";
+  status.textContent=
+   "Kamera ist bereit. Mache das Foto für den angezeigten Gegenstand.";
 
  }catch(error){
   status.textContent=
-  "Kamera konnte nicht geöffnet werden. Bitte erlaube den Kamerazugriff in deinem Browser und versuche es erneut.";
+   "Kamera konnte nicht geöffnet werden. Bitte erlaube den Kamerazugriff in deinem Browser und versuche es erneut.";
  }
 }
 
@@ -507,7 +594,7 @@ function takePhoto(){
 
  if(!photoStream || !video.videoWidth){
   document.getElementById("cameraStatus").textContent=
-  "Die Kamera ist noch nicht bereit. Bitte kurz warten.";
+   "Die Kamera ist noch nicht bereit. Bitte kurz warten.";
   return;
  }
 
@@ -538,23 +625,30 @@ function takePhoto(){
 
  if(photoIndex<photoTasks.length){
   updatePhotoTask();
+
   document.getElementById("cameraStatus").textContent=
-  "Foto gespeichert! Weiter geht's.";
+   "Foto gespeichert! Weiter geht's.";
+
  }else{
+  // Fünf Fotos geschafft: Kamera schließen und direkt Türnummern zeigen.
   stopCamera();
 
   document.getElementById("cameraVideo").classList.add("hidden");
   document.getElementById("captureButton").classList.add("hidden");
-  document.getElementById("finishPhotoButton").classList.remove("hidden");
 
   document.getElementById("photoTask").textContent=
-  "Alle 5 Fotos sind fertig! 🎉";
+   "Alle 5 Fotos sind fertig! 🎉";
 
   document.getElementById("photoHint").textContent=
-  "Du hast die Foto-Challenge geschafft.";
+   "Du hast die Foto-Challenge geschafft!";
 
   document.getElementById("cameraStatus").textContent=
-  "Die Fotos bleiben nur vorübergehend auf diesem Gerät und werden nicht hochgeladen.";
+   "Super! Deine Türnummern werden jetzt angezeigt.";
+
+  setTimeout(()=>{
+   document.getElementById("photoChallenge").classList.add("hidden");
+   showFinal();
+  },1000);
  }
 }
 
@@ -565,63 +659,95 @@ function stopCamera(){
  }
 }
 
-// Mamis Stein-Suche
+// Falls die Foto-Challenge manuell beendet werden soll.
+function finishPhotoChallenge(){
+ if(capturedPhotos.length!==5)return;
+
+ stopCamera();
+
+ document.getElementById("photoChallenge").classList.add("hidden");
+ showFinal();
+}
+
+// =================================
+// MAMIS STEIN-SUCHE
+// =================================
+
 const mamaHints=[
  "Stein 1: Suche beim Bett.",
  "Stein 2: Suche beim Stuhl.",
  "Stein 3: Suche in der Küche.",
  "Stein 4: Suche im Bad."
 ];
+
 let mamaStoneIndex=0;
 let mamaChallengeComplete=false;
 
 function startMamaChallenge(){
  mamaChallengeComplete=false;
- game.classList.add("hidden");
- document.getElementById("mamaChallenge").classList.remove("hidden");
  mamaStoneIndex=0;
+
+ document.getElementById("mamaChallenge").classList.remove("hidden");
+ document.getElementById("game").classList.add("hidden");
+
  updateMamaHint();
 }
 
 function updateMamaHint(){
- document.getElementById("mamaHint").textContent=mamaHints[mamaStoneIndex];
+ document.getElementById("mamaHint").textContent=
+  mamaHints[mamaStoneIndex];
+
  document.getElementById("mamaProgress").textContent=
   "Stein "+(mamaStoneIndex+1)+" von 4";
 }
 
 function mamaFoundStone(){
  mamaStoneIndex++;
+
  if(mamaStoneIndex<mamaHints.length){
   updateMamaHint();
  }else{
   mamaChallengeComplete=true;
+
   document.getElementById("mamaChallenge").classList.add("hidden");
-  openCodeGate("Du hast alle vier Steine gefunden! Gehe jetzt zu Nico und hole dir den Code 4444.");
+
+  openCodeGate(
+   "Du hast alle vier Steine gefunden! Gehe jetzt zu Nico und hole dir den Code 4444."
+  );
  }
 }
 
-// Lunis Detektiv-Challenge
+// =================================
+// LUNIS DETEKTIV-CHALLENGE
+// =================================
+
 const luniHints=[
  "Suche den ersten Zettel im Bad. Gib die Ziffer vom Zettel ein.",
  "Richtig! Suche jetzt den nächsten Zettel beim 8er-Ballon.",
  "Sehr gut! Suche jetzt den nächsten Zettel beim Fernseher.",
  "Fast geschafft! Suche den letzten Zettel bei der Waschmaschine."
 ];
+
 let luniDigitIndex=0;
 let luniChallengeComplete=false;
 
 function startLuniChallenge(){
  luniChallengeComplete=false;
- game.classList.add("hidden");
- document.getElementById("luniChallenge").classList.remove("hidden");
  luniDigitIndex=0;
+
+ document.getElementById("game").classList.add("hidden");
+ document.getElementById("luniChallenge").classList.remove("hidden");
+
  document.getElementById("luniDigit").value="";
  document.getElementById("luniFeedback").textContent="";
+
  updateLuniHint();
 }
 
 function updateLuniHint(){
- document.getElementById("luniHint").textContent=luniHints[luniDigitIndex];
+ document.getElementById("luniHint").textContent=
+  luniHints[luniDigitIndex];
+
  document.getElementById("luniProgress").textContent=
   "Ziffer "+(luniDigitIndex+1)+" von 4";
 }
@@ -629,55 +755,70 @@ function updateLuniHint(){
 function checkLuniDigit(){
  const input=document.getElementById("luniDigit");
  const feedback=document.getElementById("luniFeedback");
+
  if(input.value==="3"){
   luniDigitIndex++;
   input.value="";
+
   feedback.textContent="✓ Richtig!";
+
   if(luniDigitIndex<4){
    updateLuniHint();
   }else{
    luniChallengeComplete=true;
+
    document.getElementById("luniChallenge").classList.add("hidden");
-   openCodeGate("Du hast 3333 zusammengesetzt! Gehe jetzt zu Nico und gib den Code 3333 ein.");
+
+   openCodeGate(
+    "Du hast 3333 zusammengesetzt! Gehe jetzt zu Nico und gib den Code 3333 ein."
+   );
   }
+
  }else{
-  feedback.innerHTML='<span class="errorText">❌ Falsche Ziffer. Schau noch einmal auf den Zettel!</span>';
+  feedback.innerHTML=
+   '<span class="errorText">❌ Falsche Ziffer. Schau noch einmal auf den Zettel!</span>';
+
   input.value="";
  }
 }
 
 document.getElementById("luniDigit").addEventListener("keydown",function(event){
- if(event.key==="Enter") checkLuniDigit();
+ if(event.key==="Enter"){
+  checkLuniDigit();
+ }
 });
+
+// =================================
+// CODE FÜR MAMA UND LUNI
+// =================================
 
 function openCodeGate(message){
  document.getElementById("gateMessage").textContent=message;
+
  document.getElementById("codeGate").classList.remove("hidden");
  document.getElementById("secretCode").value="";
  document.getElementById("codeFeedback").textContent="";
 }
 
-// Papa kommt nach den fünf Fotos DIREKT zu seinen Türnummern.
-function finishPhotoChallenge(){
- if(capturedPhotos.length!==5)return;
-
- stopCamera();
- document.getElementById("photoChallenge").classList.add("hidden");
- showFinal();
-}
-
-// Codeprüfung nur noch für Mama und Luni.
 function checkSecretCode(){
  const enteredCode=document.getElementById("secretCode").value;
  const feedback=document.getElementById("codeFeedback");
- const correctCode=person==="mama"?"4444":"3333";
 
- if(enteredCode===correctCode){
+ let correctCode="";
+
+ if(person==="mama"){
+  correctCode="4444";
+ }else if(person==="luni"){
+  correctCode="3333";
+ }
+
+ if(correctCode!=="" && enteredCode===correctCode){
   document.getElementById("codeGate").classList.add("hidden");
   showFinal();
  }else{
   feedback.innerHTML=
-  '<span class="errorText">❌ Das ist leider nicht der richtige Code. Frage Nico noch einmal!</span>';
+   '<span class="errorText">❌ Das ist leider nicht der richtige Code. Frage Nico noch einmal!</span>';
+
   document.getElementById("secretCode").value="";
  }
 }
@@ -688,31 +829,57 @@ document.getElementById("secretCode").addEventListener("keydown",function(event)
  }
 });
 
-function showFinal(){
- if(!mission || current!==TOTAL || errors>=MAX_ERRORS)return;
+// =================================
+// TÜERNUMMERN ANZEIGEN
+// =================================
 
- if(person==="papa" && capturedPhotos.length!==photoTasks.length)return;
- if(person==="mama" && !mamaChallengeComplete)return;
- if(person==="luni" && !luniChallengeComplete)return;
+function showFinal(){
+ if(!mission || current!==TOTAL || errors>=MAX_ERRORS){
+  return;
+ }
+
+ // Sicherheitsprüfung: Papa muss alle fünf Fotos gemacht haben.
+ if(person==="papa" && capturedPhotos.length!==5){
+  return;
+ }
+
+ // Mama muss alle vier Steine gefunden haben.
+ if(person==="mama" && !mamaChallengeComplete){
+  return;
+ }
+
+ // Luni muss alle vier Ziffern gefunden haben.
+ if(person==="luni" && !luniChallengeComplete){
+  return;
+ }
 
  game.classList.add("hidden");
  document.getElementById("photoChallenge").classList.add("hidden");
  document.getElementById("codeGate").classList.add("hidden");
+ document.getElementById("mamaChallenge").classList.add("hidden");
+ document.getElementById("luniChallenge").classList.add("hidden");
+
  finished.classList.remove("hidden");
 
  document.getElementById("finalErrors").textContent=
- "Deine Fehlerzahl: "+errors+" von 7";
+  "Deine Fehlerzahl: "+errors+" von 7";
 
  const area=document.getElementById("allDoors");
  area.innerHTML="";
 
  mission.doors.forEach(number=>{
   const door=document.createElement("span");
+
   door.className="door";
   door.textContent=number;
+
   area.appendChild(door);
  });
 }
+
+// =================================
+// NOCH EINMAL SPIELEN
+// =================================
 
 function playAgain(){
  stopCamera();
@@ -720,11 +887,13 @@ function playAgain(){
  current=0;
  errors=0;
  answered=false;
+
  capturedPhotos=[];
  photoIndex=0;
 
  mamaStoneIndex=0;
  luniDigitIndex=0;
+
  mamaChallengeComplete=false;
  luniChallengeComplete=false;
 
@@ -735,10 +904,15 @@ function playAgain(){
  document.getElementById("codeGate").classList.add("hidden");
  document.getElementById("mamaChallenge").classList.add("hidden");
  document.getElementById("luniChallenge").classList.add("hidden");
+
  startScreen.classList.remove("hidden");
 
- document.getElementById("startButton").textContent="🎁 Quiz starten";
+ document.getElementById("startButton").textContent=
+  "🎁 Quiz starten";
+
+ document.getElementById("allDoors").innerHTML="";
 }
+
 </script>
 </body>
 </html>
