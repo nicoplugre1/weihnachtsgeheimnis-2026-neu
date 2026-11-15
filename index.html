@@ -144,7 +144,7 @@ button{cursor:pointer}
  <div class="camera-actions">
   <button id="cameraStartButton" class="start-button" onclick="startCamera()">📷 Kamera öffnen</button>
   <button id="captureButton" class="secondary-button hidden" onclick="takePhoto()">Foto aufnehmen</button>
-  <button id="finishPhotoButton" class="start-button hidden" onclick="finishPhotoChallenge()">Weiter zum Code</button>
+  <button id="finishPhotoButton" class="start-button hidden" onclick="finishPhotoChallenge()">Türnummern anzeigen 🎁</button>
  </div>
 
  <p class="subtitle" id="cameraStatus" aria-live="polite">
@@ -204,7 +204,7 @@ button{cursor:pointer}
 const missions={
 mama:{
  name:"Mami",
- doors:[2,6,8,11,14,17,19,23],
+ doors:[19,3,16,8,24,12,5,21],
  questions:[
  {q:"MATHE: Ein Artikel kostet 240 €. Zuerst gibt es 15 % Rabatt, danach nochmals 20 % auf den reduzierten Preis. Wie viel kostet er am Ende?",a:["163,20 €","168 €","172,80 €","180 €"],correct:0},
  {q:"MATHE: Löse die Gleichung: 3(2x − 4) = 2x + 12",a:["x = 4","x = 5","x = 6","x = 8"],correct:2},
@@ -226,7 +226,7 @@ mama:{
 
 papa:{
  name:"Dusi",
- doors:[1,4,7,10,13,16,20,22],
+ doors:[7,22,2,15,10,23,4,18],
  questions:[
  {q:"SIMSON: Welcher Motortyp wird bei der klassischen S51 verwendet?",a:["Viertaktmotor","Zweitaktmotor","Wankelmotor","Dieselmotor"],correct:1},
  {q:"SIMSON: Welche Aufgabe hat der Vergaser?",a:["Er lädt die Batterie.","Er mischt Kraftstoff und Luft.","Er schaltet die Gänge.","Er kühlt das Getriebeöl."],correct:1},
@@ -248,7 +248,7 @@ papa:{
 
 luni:{
  name:"Luni",
- doors:[3,5,9,12,15,18,21,24],
+ doors:[13,1,20,6,17,9,14,11],
  questions:[
  {q:"FAHRSCHULE: Du kommst an eine Kreuzung ohne Verkehrszeichen. Von rechts kommt ein Auto. Was gilt grundsätzlich?",a:["Du hast Vorfahrt.","Rechts vor links.","Das größere Fahrzeug hat Vorfahrt.","Wer zuerst hupt, darf fahren."],correct:1},
  {q:"FAHRSCHULE: Was bedeutet ein rundes blaues Verkehrszeichen mit weißem Pfeil nach rechts?",a:["Rechts abbiegen ist verboten.","Vorgeschriebene Fahrtrichtung rechts.","Einbahnstraße endet.","Achtung, Kurve."],correct:1},
@@ -285,7 +285,6 @@ const qrLinks = {
 
 const TOTAL=16;
 const MAX_ERRORS=7;
-const SECRET_CODE="5555";
 
 const params=new URLSearchParams(location.search);
 let person=(params.get("mission")||"").trim().toLowerCase();
@@ -301,7 +300,7 @@ const game=document.getElementById("game");
 const finished=document.getElementById("finished");
 
 function storageKey(){
- return "weihnachtsgeheimnis_2026_version_19_"+person;
+ return "weihnachtsgeheimnis_2026_version_20_"+person;
 }
 
 function saveProgress(){
@@ -566,7 +565,7 @@ function stopCamera(){
  }
 }
 
-// Mamis Stein-Suche: Die vier Steine liegen an den angegebenen Orten.
+// Mamis Stein-Suche
 const mamaHints=[
  "Stein 1: Suche beim Bett.",
  "Stein 2: Suche beim Stuhl.",
@@ -601,7 +600,7 @@ function mamaFoundStone(){
  }
 }
 
-// Lunis Detektiv-Challenge: Jeder gefundene Zettel enthält die Ziffer 3.
+// Lunis Detektiv-Challenge
 const luniHints=[
  "Suche den ersten Zettel im Bad. Gib die Ziffer vom Zettel ein.",
  "Richtig! Suche jetzt den nächsten Zettel beim 8er-Ballon.",
@@ -658,17 +657,20 @@ function openCodeGate(message){
  document.getElementById("codeFeedback").textContent="";
 }
 
+// Papa kommt nach den fünf Fotos DIREKT zu seinen Türnummern.
 function finishPhotoChallenge(){
  if(capturedPhotos.length!==5)return;
 
+ stopCamera();
  document.getElementById("photoChallenge").classList.add("hidden");
- openCodeGate("Du hast alle fünf Fotos gemacht! Gehe jetzt zu Nico und hole dir den Code 5555.");
+ showFinal();
 }
 
+// Codeprüfung nur noch für Mama und Luni.
 function checkSecretCode(){
  const enteredCode=document.getElementById("secretCode").value;
  const feedback=document.getElementById("codeFeedback");
- const correctCode=person==="papa"?"5555":person==="mama"?"4444":"3333";
+ const correctCode=person==="mama"?"4444":"3333";
 
  if(enteredCode===correctCode){
   document.getElementById("codeGate").classList.add("hidden");
@@ -721,6 +723,11 @@ function playAgain(){
  capturedPhotos=[];
  photoIndex=0;
 
+ mamaStoneIndex=0;
+ luniDigitIndex=0;
+ mamaChallengeComplete=false;
+ luniChallengeComplete=false;
+
  saveProgress();
 
  finished.classList.add("hidden");
@@ -728,8 +735,6 @@ function playAgain(){
  document.getElementById("codeGate").classList.add("hidden");
  document.getElementById("mamaChallenge").classList.add("hidden");
  document.getElementById("luniChallenge").classList.add("hidden");
- mamaChallengeComplete=false;
- luniChallengeComplete=false;
  startScreen.classList.remove("hidden");
 
  document.getElementById("startButton").textContent="🎁 Quiz starten";
