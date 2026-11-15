@@ -59,6 +59,11 @@ button{cursor:pointer}
 .photo-card{background:#244a35;border:1px solid #c9a64b;border-radius:10px;padding:8px;font-size:14px}
 .photo-card img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:7px;margin-top:6px}
 .camera-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:14px 0}
+.code-input{
+ width:100%;max-width:280px;padding:16px;margin:15px auto;
+ display:block;text-align:center;font-size:28px;letter-spacing:10px;
+ border:2px solid #d6b451;border-radius:12px;background:#fff;color:#17291b;
+}
 .hidden{display:none!important}
 .small{color:#bcb69f;font-size:13px;margin-top:25px}
 .decoration{color:#d6b451;font-size:20px;margin:12px}
@@ -82,15 +87,15 @@ button{cursor:pointer}
 <div class="qr-grid">
   <div class="qr-card">
     <h3>Mama</h3>
-    <img id="qrMama" alt="Mama Quiz QR Code" />
+    <img id="qrMama" alt="Mama Quiz QR Code">
   </div>
   <div class="qr-card">
     <h3>Luna</h3>
-    <img id="qrLuna" alt="Luna Quiz QR Code" />
+    <img id="qrLuna" alt="Luna Quiz QR Code">
   </div>
   <div class="qr-card">
     <h3>Papa</h3>
-    <img id="qrPapa" alt="Papa Quiz QR Code" />
+    <img id="qrPapa" alt="Papa Quiz QR Code">
   </div>
 </div>
 
@@ -124,20 +129,55 @@ button{cursor:pointer}
 <div id="photoChallenge" class="hidden">
  <div class="tree">📸</div>
  <h1>Papas Foto-Challenge</h1>
- <p class="subtitle">Mache nacheinander fünf Fotos. Fotografiere jeweils den Gegenstand, der angezeigt wird.</p>
- <h2 id="photoTask">1 von 5: Kugelschreiber</h2>
- <p class="subtitle" id="photoHint">Halte den Gegenstand ins Kamerabild und drücke auf „Foto aufnehmen“.</p>
+ <p class="subtitle">
+ Mache nacheinander fünf Fotos. Fotografiere jeweils den Gegenstand,
+ der angezeigt wird.
+ </p>
+ <h2 id="photoTask">1 von 5: Messer</h2>
+ <p class="subtitle" id="photoHint"></p>
+
  <div class="camera-box">
   <video id="cameraVideo" autoplay playsinline muted></video>
   <canvas id="photoCanvas" class="hidden"></canvas>
  </div>
+
  <div class="camera-actions">
   <button id="cameraStartButton" class="start-button" onclick="startCamera()">📷 Kamera öffnen</button>
   <button id="captureButton" class="secondary-button hidden" onclick="takePhoto()">Foto aufnehmen</button>
-  <button id="finishPhotoButton" class="start-button hidden" onclick="finishPhotoChallenge()">🎁 Challenge abschließen</button>
+  <button id="finishPhotoButton" class="start-button hidden" onclick="finishPhotoChallenge()">Weiter zum Code</button>
  </div>
- <p class="subtitle" id="cameraStatus" aria-live="polite">Die Kamera wird erst geöffnet, wenn du auf „Kamera öffnen“ drückst.</p>
+
+ <p class="subtitle" id="cameraStatus" aria-live="polite">
+ Die Kamera wird erst geöffnet, wenn du auf „Kamera öffnen“ drückst.
+ </p>
+ <p class="subtitle">
+ Beim Messer bitte nur ein bereits sicher abgelegtes Messer fotografieren.
+ Nicht anfassen oder bewegen. Falls nötig, einen Erwachsenen fragen.
+ </p>
  <div id="photoPreview"></div>
+</div>
+
+<div id="codeGate" class="hidden">
+ <div class="tree">🔐</div>
+ <h1>Fast geschafft!</h1>
+ <p class="subtitle">
+ Du hast alle fünf Fotos gemacht! 🎉
+ </p>
+ <h2>Gehe jetzt zu Nico!</h2>
+ <p class="subtitle">
+ Nico gibt dir den geheimen Code. Gib ihn hier ein, um deine Türnummern zu bekommen.
+ </p>
+ <input
+  id="secretCode"
+  class="code-input"
+  type="password"
+  inputmode="numeric"
+  maxlength="4"
+  placeholder="••••"
+  autocomplete="off"
+ >
+ <button class="start-button" onclick="checkSecretCode()">Code bestätigen</button>
+ <p class="feedback" id="codeFeedback" aria-live="polite"></p>
 </div>
 
 <div id="finished" class="hidden">
@@ -223,22 +263,23 @@ luni:{
  ]}
 };
 
-const baseUrl = 'https://nicoplugre.github.io/weihnachtsgeheimnis-2026-neu/';
+const baseUrl = 'https://nicoplugre1.github.io/adventskalender-2026/';
 const qrBase = 'https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=';
 
 const qrLinks = {
-  mama: `${baseUrl}?mission=mama`,
-  luna: `${baseUrl}?mission=luni`,
-  papa: `${baseUrl}?mission=papa`
+ mama: `${baseUrl}?mission=mama`,
+ luna: `${baseUrl}?mission=luni`,
+ papa: `${baseUrl}?mission=papa`
 };
 
 ['mama','luna','papa'].forEach(personName => {
-  const img = document.getElementById('qr' + personName.charAt(0).toUpperCase() + personName.slice(1));
-  if (img) img.src = qrBase + encodeURIComponent(qrLinks[personName]);
+ const img = document.getElementById('qr' + personName.charAt(0).toUpperCase() + personName.slice(1));
+ if(img) img.src = qrBase + encodeURIComponent(qrLinks[personName]);
 });
 
 const TOTAL=16;
 const MAX_ERRORS=7;
+const SECRET_CODE="5555";
 
 const params=new URLSearchParams(location.search);
 let person=(params.get("mission")||"").trim().toLowerCase();
@@ -254,7 +295,7 @@ const game=document.getElementById("game");
 const finished=document.getElementById("finished");
 
 function storageKey(){
- return "weihnachtsgeheimnis_2026_version_16_neu_"+person;
+ return "weihnachtsgeheimnis_2026_version_18_"+person;
 }
 
 function saveProgress(){
@@ -348,9 +389,7 @@ function checkAnswer(index,selected){
  if(index===item.correct){
   answered=true;
   buttons.forEach(button=>button.disabled=true);
-
   feedback.textContent="🎉 Richtig! Weiter geht's!";
-
   current++;
   saveProgress();
   updateStats();
@@ -364,12 +403,9 @@ function checkAnswer(index,selected){
   current=0;
   errors=0;
   answered=false;
-
   localStorage.removeItem(storageKey());
   saveProgress();
-
   renderQuestion();
-
   feedback.innerHTML=
   '<span class="errorText">🚨 7 Fehler erreicht! Alles wurde zurückgesetzt. Du musst wieder bei Frage 1 anfangen!</span>';
   return;
@@ -377,11 +413,9 @@ function checkAnswer(index,selected){
 
  saveProgress();
  updateStats();
-
  feedback.innerHTML=
  '<span class="errorText">❌ Leider falsch! Versuch es noch einmal.</span><br>'+
  "Du hast "+errors+" von 7 Fehlern.";
-
  selected.disabled=true;
 }
 
@@ -397,8 +431,8 @@ function nextQuestion(){
  }
 }
 
-// Papas persönliche Foto-Challenge
-const photoTasks=["Kugelschreiber","Messer","Baum","Fisch","Laptop"];
+// Papas Foto-Challenge
+const photoTasks=["Messer","Simson","Laptop","Schrank","Klobürste"];
 let photoIndex=0;
 let photoStream=null;
 let capturedPhotos=[];
@@ -406,64 +440,94 @@ let capturedPhotos=[];
 function startPhotoChallenge(){
  game.classList.add("hidden");
  document.getElementById("finished").classList.add("hidden");
+ document.getElementById("codeGate").classList.add("hidden");
  document.getElementById("photoChallenge").classList.remove("hidden");
+
  photoIndex=0;
  capturedPhotos=[];
+
  document.getElementById("photoPreview").innerHTML="";
  document.getElementById("cameraVideo").classList.remove("hidden");
  document.getElementById("cameraVideo").srcObject=null;
+
  document.getElementById("cameraStartButton").classList.remove("hidden");
  document.getElementById("captureButton").classList.add("hidden");
  document.getElementById("finishPhotoButton").classList.add("hidden");
- document.getElementById("cameraStatus").textContent="Erlaube den Kamerazugriff, wenn dein Browser danach fragt.";
+
+ document.getElementById("cameraStatus").textContent=
+ "Erlaube den Kamerazugriff, wenn dein Browser danach fragt.";
+
  updatePhotoTask();
 }
 
 function updatePhotoTask(){
- document.getElementById("photoTask").textContent=(photoIndex+1)+" von 5: "+photoTasks[photoIndex];
- document.getElementById("photoHint").textContent="Richte die Kamera auf: "+photoTasks[photoIndex]+". Dann drücke auf „Foto aufnehmen“.";
+ document.getElementById("photoTask").textContent=
+ (photoIndex+1)+" von 5: "+photoTasks[photoIndex];
+
+ document.getElementById("photoHint").textContent=
+ "Richte die Kamera auf: "+photoTasks[photoIndex]+
+ ". Dann drücke auf „Foto aufnehmen“.";
 }
 
 async function startCamera(){
  const status=document.getElementById("cameraStatus");
+
  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
-  status.textContent="Die Kamera funktioniert nur über HTTPS oder localhost. Öffne die Webseite über ihre GitHub-Pages-Adresse.";
+  status.textContent=
+  "Die Kamera funktioniert nur über HTTPS. Öffne die Webseite über ihre GitHub-Pages-Adresse.";
   return;
  }
+
  try{
-  photoStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"},audio:false});
+  photoStream=await navigator.mediaDevices.getUserMedia({
+   video:{facingMode:"environment"},
+   audio:false
+  });
+
   const video=document.getElementById("cameraVideo");
   video.srcObject=photoStream;
   await video.play();
+
   document.getElementById("cameraStartButton").classList.add("hidden");
   document.getElementById("captureButton").classList.remove("hidden");
+
   status.textContent="Kamera ist bereit. Mache das Foto für den angezeigten Gegenstand.";
+
  }catch(error){
-  status.textContent="Kamera konnte nicht geöffnet werden. Bitte erlaube den Kamerazugriff in deinem Browser und versuche es erneut.";
+  status.textContent=
+  "Kamera konnte nicht geöffnet werden. Bitte erlaube den Kamerazugriff in deinem Browser und versuche es erneut.";
  }
 }
 
 function takePhoto(){
  const video=document.getElementById("cameraVideo");
+
  if(!photoStream || !video.videoWidth){
-  document.getElementById("cameraStatus").textContent="Die Kamera ist noch nicht bereit. Bitte kurz warten.";
+  document.getElementById("cameraStatus").textContent=
+  "Die Kamera ist noch nicht bereit. Bitte kurz warten.";
   return;
  }
+
  const canvas=document.getElementById("photoCanvas");
  canvas.width=video.videoWidth;
  canvas.height=video.videoHeight;
+
  const context=canvas.getContext("2d");
  context.drawImage(video,0,0,canvas.width,canvas.height);
+
  const dataUrl=canvas.toDataURL("image/jpeg",0.85);
  capturedPhotos.push(dataUrl);
 
  const card=document.createElement("div");
  card.className="photo-card";
+
  const label=document.createElement("div");
  label.textContent="✓ "+photoTasks[photoIndex];
+
  const img=document.createElement("img");
  img.src=dataUrl;
  img.alt="Foto von "+photoTasks[photoIndex];
+
  card.append(label,img);
  document.getElementById("photoPreview").appendChild(card);
 
@@ -471,15 +535,23 @@ function takePhoto(){
 
  if(photoIndex<photoTasks.length){
   updatePhotoTask();
-  document.getElementById("cameraStatus").textContent="Foto gespeichert! Weiter geht's.";
+  document.getElementById("cameraStatus").textContent=
+  "Foto gespeichert! Weiter geht's.";
  }else{
   stopCamera();
+
   document.getElementById("cameraVideo").classList.add("hidden");
   document.getElementById("captureButton").classList.add("hidden");
   document.getElementById("finishPhotoButton").classList.remove("hidden");
-  document.getElementById("photoTask").textContent="Alle 5 Fotos sind fertig! 🎉";
-  document.getElementById("photoHint").textContent="Du hast die Foto-Challenge geschafft.";
-  document.getElementById("cameraStatus").textContent="Die Fotos bleiben nur vorübergehend auf diesem Gerät im geöffneten Browserfenster und werden nicht hochgeladen.";
+
+  document.getElementById("photoTask").textContent=
+  "Alle 5 Fotos sind fertig! 🎉";
+
+  document.getElementById("photoHint").textContent=
+  "Du hast die Foto-Challenge geschafft.";
+
+  document.getElementById("cameraStatus").textContent=
+  "Die Fotos bleiben nur vorübergehend auf diesem Gerät und werden nicht hochgeladen.";
  }
 }
 
@@ -492,15 +564,42 @@ function stopCamera(){
 
 function finishPhotoChallenge(){
  if(capturedPhotos.length!==5)return;
+
  document.getElementById("photoChallenge").classList.add("hidden");
- showFinal();
+ document.getElementById("codeGate").classList.remove("hidden");
+
+ document.getElementById("secretCode").value="";
+ document.getElementById("codeFeedback").textContent="";
 }
+
+function checkSecretCode(){
+ const enteredCode=document.getElementById("secretCode").value;
+ const feedback=document.getElementById("codeFeedback");
+
+ if(enteredCode===SECRET_CODE){
+  document.getElementById("codeGate").classList.add("hidden");
+  showFinal();
+ }else{
+  feedback.innerHTML=
+  '<span class="errorText">❌ Das ist leider nicht der richtige Code. Frage Nico noch einmal!</span>';
+  document.getElementById("secretCode").value="";
+ }
+}
+
+document.getElementById("secretCode").addEventListener("keydown",function(event){
+ if(event.key==="Enter"){
+  checkSecretCode();
+ }
+});
 
 function showFinal(){
  if(!mission || current!==TOTAL || errors>=MAX_ERRORS)return;
+
  if(person==="papa" && capturedPhotos.length!==photoTasks.length)return;
 
  game.classList.add("hidden");
+ document.getElementById("photoChallenge").classList.add("hidden");
+ document.getElementById("codeGate").classList.add("hidden");
  finished.classList.remove("hidden");
 
  document.getElementById("finalErrors").textContent=
@@ -519,16 +618,20 @@ function showFinal(){
 
 function playAgain(){
  stopCamera();
+
  current=0;
  errors=0;
  answered=false;
  capturedPhotos=[];
  photoIndex=0;
+
  saveProgress();
 
  finished.classList.add("hidden");
  document.getElementById("photoChallenge").classList.add("hidden");
+ document.getElementById("codeGate").classList.add("hidden");
  startScreen.classList.remove("hidden");
+
  document.getElementById("startButton").textContent="🎁 Quiz starten";
 }
 </script>
