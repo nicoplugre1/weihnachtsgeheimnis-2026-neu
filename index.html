@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Weihnachtsgeheimnis 2026</title>
+
 <style>
 *{box-sizing:border-box}
 body{
@@ -74,6 +75,7 @@ button{cursor:pointer}
 @media (max-width:720px){.qr-grid{grid-template-columns:1fr}}
 </style>
 </head>
+
 <body>
 
 <div class="snow" style="left:8%;animation-duration:12s">❄</div>
@@ -133,7 +135,7 @@ button{cursor:pointer}
  Mache nacheinander fünf Fotos. Fotografiere jeweils den Gegenstand,
  der angezeigt wird.
  </p>
- <h2 id="photoTask">1 von 5: Messer</h2>
+ <h2 id="photoTask">1 von 5: Kugelschreiber</h2>
  <p class="subtitle" id="photoHint"></p>
 
  <div class="camera-box">
@@ -149,17 +151,13 @@ button{cursor:pointer}
  <p class="subtitle" id="cameraStatus" aria-live="polite">
  Die Kamera wird erst geöffnet, wenn du auf „Kamera öffnen“ drückst.
  </p>
- <p class="subtitle">
- Beim Messer bitte nur ein bereits sicher abgelegtes Messer fotografieren.
- Nicht anfassen oder bewegen. Falls nötig, einen Erwachsenen fragen.
- </p>
  <div id="photoPreview"></div>
 </div>
 
 <div id="codeGate" class="hidden">
  <div class="tree">🔐</div>
  <h1>Fast geschafft!</h1>
- <p class="subtitle" id="gateMessage">Gehe jetzt zu Nico und hole dir deinen geheimen Code.</p>
+ <p class="subtitle" id="gateMessage"></p>
  <input id="secretCode" class="code-input" type="password" inputmode="numeric"
   maxlength="4" placeholder="••••" autocomplete="off">
  <button class="start-button" onclick="checkSecretCode()">Code bestätigen</button>
@@ -171,7 +169,7 @@ button{cursor:pointer}
  <h1>Mamis Stein-Suche</h1>
  <p class="subtitle" id="mamaHint"></p>
  <p class="subtitle" id="mamaProgress">Stein 1 von 4</p>
- <button class="start-button" id="mamaFoundButton" onclick="mamaFoundStone()">Stein gefunden!</button>
+ <button class="start-button" onclick="mamaFoundStone()">Stein gefunden!</button>
 </div>
 
 <div id="luniChallenge" class="hidden">
@@ -268,8 +266,8 @@ luni:{
  ]}
 };
 
-// QR-Codes: Die Internetadressen bleiben unverändert.
-const baseUrl = 'https://nicoplugre1.github.io/weihnachtsgeheimnis-2026-neu/';
+// QR-Codes zeigen auf das neue Repository.
+const baseUrl='https://nicoplugre1.github.io/weihnachtsgeheimnis-2026-neu/';
 const qrBase='https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=';
 
 const qrLinks={
@@ -304,9 +302,9 @@ const startScreen=document.getElementById("startScreen");
 const game=document.getElementById("game");
 const finished=document.getElementById("finished");
 
-// Neue Versionsnummer: alter gespeicherter Quiz-Fortschritt wird nicht übernommen.
+// Neue Versionsnummer: alter Quiz-Fortschritt wird zurückgesetzt.
 function storageKey(){
- return "weihnachtsgeheimnis_2026_version_21_"+person;
+ return "weihnachtsgeheimnis_2026_version_22_"+person;
 }
 
 function saveProgress(){
@@ -369,13 +367,13 @@ function startQuiz(){
  finished.classList.add("hidden");
  document.getElementById("allDoors").innerHTML="";
 
- // Falls das Quiz bereits fertig war, direkt zur persönlichen Challenge.
  if(current>=TOTAL){
   startPersonalChallenge();
   return;
  }
 
  game.classList.remove("hidden");
+
  document.getElementById("quizWelcome").textContent=
   "Viel Erfolg, "+mission.name+"! 🎄";
 
@@ -397,7 +395,6 @@ function renderQuestion(){
  answered=false;
 
  finished.classList.add("hidden");
-
  document.getElementById("allDoors").innerHTML="";
 
  const item=mission.questions[current];
@@ -437,10 +434,10 @@ function checkAnswer(index,selected){
 
   if(current>=TOTAL){
    document.getElementById("nextButton").classList.add("hidden");
+
    feedback.textContent=
     "🎉 Alle 16 Fragen richtig beantwortet! Deine nächste Challenge startet jetzt!";
 
-   // Die persönliche Challenge startet automatisch.
    setTimeout(()=>{
     startPersonalChallenge();
    },900);
@@ -512,7 +509,7 @@ function startPersonalChallenge(){
 // =================================
 
 const photoTasks=[
- "Messer",
+ "Kugelschreiber",
  "Simson",
  "Laptop",
  "Schrank",
@@ -630,7 +627,6 @@ function takePhoto(){
    "Foto gespeichert! Weiter geht's.";
 
  }else{
-  // Fünf Fotos geschafft: Kamera schließen und direkt Türnummern zeigen.
   stopCamera();
 
   document.getElementById("cameraVideo").classList.add("hidden");
@@ -657,16 +653,6 @@ function stopCamera(){
   photoStream.getTracks().forEach(track=>track.stop());
   photoStream=null;
  }
-}
-
-// Falls die Foto-Challenge manuell beendet werden soll.
-function finishPhotoChallenge(){
- if(capturedPhotos.length!==5)return;
-
- stopCamera();
-
- document.getElementById("photoChallenge").classList.add("hidden");
- showFinal();
 }
 
 // =================================
@@ -712,7 +698,7 @@ function mamaFoundStone(){
   document.getElementById("mamaChallenge").classList.add("hidden");
 
   openCodeGate(
-   "Du hast alle vier Steine gefunden! Gehe jetzt zu Nico und hole dir den Code 4444."
+   "Du hast alle vier Steine gefunden! Gib jetzt den vollen Code ein."
   );
  }
 }
@@ -794,7 +780,6 @@ document.getElementById("luniDigit").addEventListener("keydown",function(event){
 
 function openCodeGate(message){
  document.getElementById("gateMessage").textContent=message;
-
  document.getElementById("codeGate").classList.remove("hidden");
  document.getElementById("secretCode").value="";
  document.getElementById("codeFeedback").textContent="";
@@ -817,7 +802,7 @@ function checkSecretCode(){
   showFinal();
  }else{
   feedback.innerHTML=
-   '<span class="errorText">❌ Das ist leider nicht der richtige Code. Frage Nico noch einmal!</span>';
+   '<span class="errorText">❌ Das ist leider nicht der richtige Code. Schau noch einmal nach!</span>';
 
   document.getElementById("secretCode").value="";
  }
@@ -838,17 +823,14 @@ function showFinal(){
   return;
  }
 
- // Sicherheitsprüfung: Papa muss alle fünf Fotos gemacht haben.
  if(person==="papa" && capturedPhotos.length!==5){
   return;
  }
 
- // Mama muss alle vier Steine gefunden haben.
  if(person==="mama" && !mamaChallengeComplete){
   return;
  }
 
- // Luni muss alle vier Ziffern gefunden haben.
  if(person==="luni" && !luniChallengeComplete){
   return;
  }
