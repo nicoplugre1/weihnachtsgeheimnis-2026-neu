@@ -160,24 +160,30 @@ button{cursor:pointer}
 <div id="codeGate" class="hidden">
  <div class="tree">🔐</div>
  <h1>Fast geschafft!</h1>
- <p class="subtitle">
- Du hast alle fünf Fotos gemacht! 🎉
- </p>
- <h2>Gehe jetzt zu Nico!</h2>
- <p class="subtitle">
- Nico gibt dir den geheimen Code. Gib ihn hier ein, um deine Türnummern zu bekommen.
- </p>
- <input
-  id="secretCode"
-  class="code-input"
-  type="password"
-  inputmode="numeric"
-  maxlength="4"
-  placeholder="••••"
-  autocomplete="off"
- >
+ <p class="subtitle" id="gateMessage">Gehe jetzt zu Nico und hole dir deinen geheimen Code.</p>
+ <input id="secretCode" class="code-input" type="password" inputmode="numeric"
+  maxlength="4" placeholder="••••" autocomplete="off">
  <button class="start-button" onclick="checkSecretCode()">Code bestätigen</button>
  <p class="feedback" id="codeFeedback" aria-live="polite"></p>
+</div>
+
+<div id="mamaChallenge" class="hidden">
+ <div class="tree">🪨</div>
+ <h1>Mamis Stein-Suche</h1>
+ <p class="subtitle" id="mamaHint"></p>
+ <p class="subtitle" id="mamaProgress">Stein 1 von 4</p>
+ <button class="start-button" id="mamaFoundButton" onclick="mamaFoundStone()">Stein gefunden!</button>
+</div>
+
+<div id="luniChallenge" class="hidden">
+ <div class="tree">🕵️‍♀️</div>
+ <h1>Lunis Detektiv-Challenge</h1>
+ <p class="subtitle" id="luniHint"></p>
+ <p class="subtitle" id="luniProgress">Ziffer 1 von 4</p>
+ <input id="luniDigit" class="code-input" type="password" inputmode="numeric"
+  maxlength="1" placeholder="?" autocomplete="off">
+ <button class="start-button" onclick="checkLuniDigit()">Ziffer prüfen</button>
+ <p class="feedback" id="luniFeedback" aria-live="polite"></p>
 </div>
 
 <div id="finished" class="hidden">
@@ -295,7 +301,7 @@ const game=document.getElementById("game");
 const finished=document.getElementById("finished");
 
 function storageKey(){
- return "weihnachtsgeheimnis_2026_version_18_"+person;
+ return "weihnachtsgeheimnis_2026_version_19_"+person;
 }
 
 function saveProgress(){
@@ -421,11 +427,9 @@ function checkAnswer(index,selected){
 
 function nextQuestion(){
  if(current>=TOTAL){
-  if(person==="papa"){
-   startPhotoChallenge();
-  }else{
-   showFinal();
-  }
+  if(person==="papa") startPhotoChallenge();
+  else if(person==="mama") startMamaChallenge();
+  else if(person==="luni") startLuniChallenge();
  }else{
   renderQuestion();
  }
@@ -562,21 +566,111 @@ function stopCamera(){
  }
 }
 
+// Mamis Stein-Suche: Die vier Steine liegen an den angegebenen Orten.
+const mamaHints=[
+ "Stein 1: Suche beim Bett.",
+ "Stein 2: Suche beim Stuhl.",
+ "Stein 3: Suche in der Küche.",
+ "Stein 4: Suche im Bad."
+];
+let mamaStoneIndex=0;
+let mamaChallengeComplete=false;
+
+function startMamaChallenge(){
+ mamaChallengeComplete=false;
+ game.classList.add("hidden");
+ document.getElementById("mamaChallenge").classList.remove("hidden");
+ mamaStoneIndex=0;
+ updateMamaHint();
+}
+
+function updateMamaHint(){
+ document.getElementById("mamaHint").textContent=mamaHints[mamaStoneIndex];
+ document.getElementById("mamaProgress").textContent=
+  "Stein "+(mamaStoneIndex+1)+" von 4";
+}
+
+function mamaFoundStone(){
+ mamaStoneIndex++;
+ if(mamaStoneIndex<mamaHints.length){
+  updateMamaHint();
+ }else{
+  mamaChallengeComplete=true;
+  document.getElementById("mamaChallenge").classList.add("hidden");
+  openCodeGate("Du hast alle vier Steine gefunden! Gehe jetzt zu Nico und hole dir den Code 4444.");
+ }
+}
+
+// Lunis Detektiv-Challenge: Jeder gefundene Zettel enthält die Ziffer 3.
+const luniHints=[
+ "Suche den ersten Zettel im Bad. Gib die Ziffer vom Zettel ein.",
+ "Richtig! Suche jetzt den nächsten Zettel beim 8er-Ballon.",
+ "Sehr gut! Suche jetzt den nächsten Zettel beim Fernseher.",
+ "Fast geschafft! Suche den letzten Zettel bei der Waschmaschine."
+];
+let luniDigitIndex=0;
+let luniChallengeComplete=false;
+
+function startLuniChallenge(){
+ luniChallengeComplete=false;
+ game.classList.add("hidden");
+ document.getElementById("luniChallenge").classList.remove("hidden");
+ luniDigitIndex=0;
+ document.getElementById("luniDigit").value="";
+ document.getElementById("luniFeedback").textContent="";
+ updateLuniHint();
+}
+
+function updateLuniHint(){
+ document.getElementById("luniHint").textContent=luniHints[luniDigitIndex];
+ document.getElementById("luniProgress").textContent=
+  "Ziffer "+(luniDigitIndex+1)+" von 4";
+}
+
+function checkLuniDigit(){
+ const input=document.getElementById("luniDigit");
+ const feedback=document.getElementById("luniFeedback");
+ if(input.value==="3"){
+  luniDigitIndex++;
+  input.value="";
+  feedback.textContent="✓ Richtig!";
+  if(luniDigitIndex<4){
+   updateLuniHint();
+  }else{
+   luniChallengeComplete=true;
+   document.getElementById("luniChallenge").classList.add("hidden");
+   openCodeGate("Du hast 3333 zusammengesetzt! Gehe jetzt zu Nico und gib den Code 3333 ein.");
+  }
+ }else{
+  feedback.innerHTML='<span class="errorText">❌ Falsche Ziffer. Schau noch einmal auf den Zettel!</span>';
+  input.value="";
+ }
+}
+
+document.getElementById("luniDigit").addEventListener("keydown",function(event){
+ if(event.key==="Enter") checkLuniDigit();
+});
+
+function openCodeGate(message){
+ document.getElementById("gateMessage").textContent=message;
+ document.getElementById("codeGate").classList.remove("hidden");
+ document.getElementById("secretCode").value="";
+ document.getElementById("codeFeedback").textContent="";
+}
+
 function finishPhotoChallenge(){
  if(capturedPhotos.length!==5)return;
 
  document.getElementById("photoChallenge").classList.add("hidden");
- document.getElementById("codeGate").classList.remove("hidden");
-
- document.getElementById("secretCode").value="";
- document.getElementById("codeFeedback").textContent="";
+ openCodeGate("Du hast alle fünf Fotos gemacht! Gehe jetzt zu Nico und hole dir den Code 5555.");
 }
 
 function checkSecretCode(){
  const enteredCode=document.getElementById("secretCode").value;
  const feedback=document.getElementById("codeFeedback");
+ const correctCode=person==="papa"?"5555":person==="mama"?"4444":"3333";
 
- if(enteredCode===SECRET_CODE){
+ if(enteredCode===correctCode){
   document.getElementById("codeGate").classList.add("hidden");
   showFinal();
  }else{
@@ -596,6 +690,8 @@ function showFinal(){
  if(!mission || current!==TOTAL || errors>=MAX_ERRORS)return;
 
  if(person==="papa" && capturedPhotos.length!==photoTasks.length)return;
+ if(person==="mama" && !mamaChallengeComplete)return;
+ if(person==="luni" && !luniChallengeComplete)return;
 
  game.classList.add("hidden");
  document.getElementById("photoChallenge").classList.add("hidden");
@@ -630,6 +726,10 @@ function playAgain(){
  finished.classList.add("hidden");
  document.getElementById("photoChallenge").classList.add("hidden");
  document.getElementById("codeGate").classList.add("hidden");
+ document.getElementById("mamaChallenge").classList.add("hidden");
+ document.getElementById("luniChallenge").classList.add("hidden");
+ mamaChallengeComplete=false;
+ luniChallengeComplete=false;
  startScreen.classList.remove("hidden");
 
  document.getElementById("startButton").textContent="🎁 Quiz starten";
